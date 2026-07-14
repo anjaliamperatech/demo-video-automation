@@ -1,0 +1,19 @@
+{
+  "name": "playwright-demo-video-poc",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Story-driven application demo video generator using Playwright and FFmpeg",
+  "scripts": {
+    "demo:video": "node ./src/cli.mjs",
+    "story:new": "node ./src/story-wizard.mjs",
+    "story:validate": "node ./src/cli.mjs --validate-only --story ./stories/customer-onboarding.json",
+    "setup": "npm install && npx playwright install chromium"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "playwright": "^1.55.0"
+  }
+}

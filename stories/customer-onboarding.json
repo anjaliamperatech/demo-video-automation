@@ -1,0 +1,120 @@
+{
+  "title": "Customer onboarding demo",
+  "baseUrl": "${env.BASE_URL}",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "video": {
+    "retainRawVideo": true,
+    "burnSubtitles": true,
+    "audioFile": null,
+    "bannerDurationMs": 1200
+  },
+  "capture": {
+    "includeHeaders": false,
+    "includeBodies": true,
+    "maxBodyLength": 4000,
+    "urlIncludes": [
+      "/api/"
+    ],
+    "redactKeys": [
+      "password",
+      "token",
+      "authorization",
+      "cookie",
+      "set-cookie"
+    ]
+  },
+  "setup": [
+    {
+      "type": "log",
+      "message": "Optional setup stage. Replace with seed API calls or shell hooks for your repo."
+    }
+  ],
+  "scenes": [
+    {
+      "id": "login",
+      "name": "Login",
+      "narration": "First, we sign in with a demo user so the journey starts from a clean, controlled state.",
+      "pauseAfterMs": 700,
+      "actions": [
+        {
+          "type": "goto",
+          "url": "/login"
+        },
+        {
+          "type": "fillLabel",
+          "label": "Email",
+          "value": "${env.DEMO_EMAIL}"
+        },
+        {
+          "type": "fillLabel",
+          "label": "Password",
+          "value": "${env.DEMO_PASSWORD}"
+        },
+        {
+          "type": "clickButton",
+          "text": "Sign in"
+        },
+        {
+          "type": "waitForText",
+          "text": "Dashboard",
+          "timeoutMs": 15000
+        }
+      ]
+    },
+    {
+      "id": "create-customer",
+      "name": "Create customer",
+      "narration": "Next, we create a customer record and capture the request and response that power the flow.",
+      "pauseAfterMs": 1000,
+      "actions": [
+        {
+          "type": "click",
+          "selector": "[data-testid='new-customer']"
+        },
+        {
+          "type": "fill",
+          "selector": "[name='companyName']",
+          "value": "Acme Demo Pvt Ltd"
+        },
+        {
+          "type": "fill",
+          "selector": "[name='email']",
+          "value": "buyer@acme-demo.test"
+        },
+        {
+          "type": "click",
+          "selector": "button[type='submit']"
+        },
+        {
+          "type": "waitForText",
+          "text": "Customer created",
+          "timeoutMs": 15000
+        }
+      ]
+    },
+    {
+      "id": "dashboard",
+      "name": "Dashboard update",
+      "narration": "Finally, the dashboard refreshes immediately, showing the new record and the updated business metrics.",
+      "pauseAfterMs": 2000,
+      "actions": [
+        {
+          "type": "goto",
+          "url": "/dashboard"
+        },
+        {
+          "type": "waitForText",
+          "text": "Acme Demo Pvt Ltd",
+          "timeoutMs": 15000
+        },
+        {
+          "type": "hover",
+          "selector": "[data-testid='customer-card']"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+node_modules/
+output/
+.env
+.env.local
+*.log
+npm-debug.log*
+test-results/
+playwright-report/
+.DS_Store
+Thumbs.db
