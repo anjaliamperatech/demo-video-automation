@@ -16,7 +16,7 @@ You need **Node.js** and **ffmpeg** installed on your computer. If you're not su
 
 ```powershell
 node --version
-ffmpeg -version
+ffmpeg --version
 ```
 
 If either command says it isn't recognized, install the missing one:
@@ -62,30 +62,20 @@ Open `.env` in Notepad (or any text editor) and fill in the `AZURE_OPENAI_...` v
 
 You only need this if you want the AI to figure out the clicks/typing for you (the default, recommended path). If you plan to write every step by hand instead, you can skip this.
 
-### 4. Build your config by answering questions
+### 4. Build your config and record your video
 
 ```powershell
-npm run story:new
+npm run demo:studio
 ```
 
-This asks you a few questions in plain English:
+This opens a page in your browser — no terminal typing after this point. Two tabs:
 
-- What's the demo called?
-- What's the web address of the site?
-- What page should the video start on?
-- For each scene: a short name, and **narration describing what should happen** — e.g. *"Log in with demo@example.com and password hunter2, then wait for the dashboard to appear."*
+- **New / Edit Demo** — fill in the site's web address, then add a scene per step with a short name and **narration describing what should happen** — e.g. *"Log in with demo@example.com and password hunter2, then wait for the dashboard to appear."* No code, no CSS selectors. Click "Save demo".
+- **Run a Demo** — pick the demo you just saved, optionally uncheck any scenes marked as optional features you don't want in this recording, then click "Start recording". Progress streams into the page live; when it's done you'll see the path to the finished video.
 
-That's it. No code, no CSS selectors. It saves a config file into the `stories/` folder and prints the exact commands to run next.
+Prefer the terminal instead? `npm run story:new` runs the same kind of wizard as a sequence of questions, and `npm run demo:video -- --story ./stories/your-demo-name.json` runs a saved config directly (see [CLI flags](#cli-flags)).
 
-### 5. Generate the video
-
-```powershell
-npm run demo:video -- --story ./stories/your-demo-name.json
-```
-
-Watch the browser window (or run headless, see below) as it performs the steps and narrates each scene. When it finishes, it prints the location of the final video.
-
-### 6. Find your video
+### 5. Find your video
 
 Look in the `output/` folder for a new subfolder named after your demo and the date/time. Inside is `final-demo.mp4` — that's your video, with burned-in captions from your narration.
 
@@ -100,6 +90,8 @@ You have three options, and you can mix them scene by scene:
 3. **One full voiceover file.** If you'd rather record one continuous voiceover for the whole video, set `"video": { "audioFile": "./narration/full-voiceover.mp3" }` in the story file. (If any scene has its own `narrationAudioFile`, that takes priority over this.)
 
 You can open the generated config file at any point and edit the narration text directly. If a scene has no recorded audio, its on-screen time automatically stretches or shrinks to give viewers enough time to read the caption (about 170 words/minute) — you don't need to hand-tune pauses when you reword something. If a scene does have `narrationAudioFile`, the recording's actual length is used instead.
+
+**Narration polish.** If you have an Azure OpenAI key configured, whatever narration text a scene will actually speak/caption (not the raw instruction used for AI-planned clicks) is automatically rewritten into more natural, professional-sounding phrasing before it's synthesized — the underlying facts (names, emails, numbers) are always preserved exactly. The polished wording is cached to `stories/narration/<scene-id>.txt` next to the audio cache, so it only costs one AI call per scene and you can hand-edit that file to lock in specific wording. Set `"narrationPolish": false` on a scene to turn this off and speak your narration text verbatim.
 
 ---
 
@@ -118,6 +110,32 @@ Tips for narration that gets good results:
 - Be specific about values: *"Create a customer named Acme Demo Pvt Ltd with email buyer@acme-demo.test"* works better than *"add a customer."*
 - One scene = one goal. If a step opens a modal or a new page, that's a good place to start a new scene.
 - Mention what confirms success (*"...then wait for 'Customer created' to appear"*) — this gives the AI a natural place to end the scene.
+
+---
+
+## Steps that need a human (or another system)
+
+Some demo steps can't be automated — a teammate has to approve something in another tool, an email has to arrive, a webhook has to fire. Add a `waitForUser` step for these instead of pausing the whole run on a terminal prompt:
+
+```json
+{
+  "type": "waitForUser",
+  "instruction": "Approve this request in the external portal, then come back here.",
+  "until": [
+    { "kind": "text", "text": "Approved" },
+    { "kind": "url", "pattern": "**/dashboard/approved**" }
+  ],
+  "timeoutMs": 900000
+}
+```
+
+The tool shows this instruction as an on-page banner and keeps the browser open and recording — it isn't paused or blocked from your side. As soon as **any one** of the listed conditions happens (matching text appears, the page navigates to a matching URL, a matching CSS selector shows up, or a matching API response comes back), it automatically continues to the next step. Nothing before it re-runs. The idle time spent waiting is trimmed out of the final video, the same way long backend waits already are.
+
+Any story containing a `waitForUser` step automatically runs with a visible browser window, whether or not you passed `--headed` — a human can't interact with a headless one. If you're using AI-planned scenes (no explicit `actions`), you don't need to write this JSON by hand: just describe the hand-off in the narration (*"wait for the reviewer to approve this in another tab, then continue"*) and the AI adds the waiting step for you. The Demo Studio's "I'll specify the exact steps" mode also has a builder for this.
+
+## Picking which scenes to include
+
+Mark a scene `"optional": true` to turn it into a toggleable feature — everything else always runs. In Demo Studio's "Run a Demo" tab, optional scenes show up as checkboxes (checked by default); from the CLI, pass `--scenes id1,id2` to include only those optional scenes (see [CLI flags](#cli-flags)). This is handy for one config that covers several features, where a given recording only needs to show some of them.
 
 ---
 
@@ -209,9 +227,10 @@ Friendly (identify things the way a person would describe them):
 - `fillLabel` — type into a field identified by its label
 - `fillPlaceholder` — type into a field identified by its placeholder text
 - `selectLabel` — choose a dropdown option, field identified by its label
-- `waitForText` — wait for text to appear on screen
+- `waitForText` — wait for text to appear on screen. Uses the action's own `timeoutMs` if given, else 15s, same as every other action. If a scene has a genuinely slow step to wait on (e.g. real backend content generation that can take minutes), add `"waitForTextMinMs": 600000` (or whatever floor you need) to that **scene** — it raises the timeout floor for all `waitForText` steps in that scene, including AI-planned ones that don't set their own `timeoutMs`. Leave it unset for normal scenes so a broken flow fails fast instead of hanging.
 - `goto` — navigate to a path relative to `baseUrl`
 - `wait` — pause for a fixed number of milliseconds
+- `waitForUser` — pause for a human or external system, auto-resuming; see [Steps that need a human](#steps-that-need-a-human-or-another-system)
 
 CSS-selector based (for precise/advanced control):
 
@@ -231,10 +250,12 @@ npm run demo:video -- --story ./stories/customer-onboarding.json
 npm run demo:video -- --story ./stories/customer-onboarding.json --headed
 npm run demo:video -- --story ./stories/customer-onboarding.json --output ./output
 npm run demo:video -- --story ./stories/customer-onboarding.json --validate-only
+npm run demo:video -- --story ./stories/customer-onboarding.json --scenes billing,reporting
 ```
 
 - `--headed` shows the browser window while it runs (useful when building/debugging a new demo)
 - `--validate-only` checks the story file's structure without launching a browser
+- `--scenes id1,id2` includes only those scenes among ones marked `"optional": true`; every other scene always runs (see [Picking which scenes to include](#picking-which-scenes-to-include))
 
 ---
 

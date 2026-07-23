@@ -1,0 +1,1 @@
+This is BrandRank AI, a platform that tracks how visible your brand is across AI engines like ChatGPT, Gemini, and Perplexity, alongside traditional Google search. It brings your organic search performance and your AI-search presence into one dashboard, so you can see the full picture of how people discover your brand today.

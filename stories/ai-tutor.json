@@ -1,0 +1,71 @@
+{
+  "title": "AI Tutor",
+  "baseUrl": "${env.TUTOR_BASE_URL}",
+  "startPath": "/login",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "video": {
+    "retainRawVideo": true,
+    "burnSubtitles": true,
+    "audioFile": null,
+    "bannerDurationMs": 1200
+  },
+  "capture": {
+    "includeHeaders": false,
+    "includeBodies": true,
+    "maxBodyLength": 4000,
+    "urlIncludes": [
+      "/api/"
+    ],
+    "redactKeys": [
+      "password",
+      "token",
+      "authorization",
+      "cookie",
+      "set-cookie"
+    ]
+  },
+  "setup": [],
+  "scenes": [
+    {
+      "id": "login",
+      "name": "Login",
+      "narration": "Fresher Tutor is a training platform for new hires joining the company. We sign in to get started.",
+      "pauseAfterMs": 800,
+      "actions": [
+        { "type": "goto", "url": "/login" },
+        { "type": "fill", "selector": "input[type='email']", "value": "${env.TUTOR_EMAIL}" },
+        { "type": "fill", "selector": "input[type='password']", "value": "${env.TUTOR_PASSWORD}" },
+        { "type": "clickButton", "text": "Log in" },
+        { "type": "waitForText", "text": "Study a topic", "timeoutMs": 15000 }
+      ]
+    },
+    {
+      "id": "dashboard-overview",
+      "name": "Dashboard overview",
+      "narration": "This is the fresher's home base: a live feed of what's new in their tech stack, two ways to build skills, and a progress tracker showing how many topics they've mastered so far.",
+      "pauseAfterMs": 500,
+      "actions": [
+        { "type": "wait", "ms": 500 },
+        { "type": "scrollToBottom" }
+      ]
+    },
+    {
+      "id": "start-learning",
+      "name": "Start learning",
+      "narration": "Click Start learning to study a topic."
+    },
+    {
+      "id": "pick-topic",
+      "name": "Pick a topic",
+      "narration": "Pick any available topic from the list to begin studying it."
+    },
+    {
+      "id": "topic-explanation",
+      "name": "AI explanation and quiz",
+      "narration": "The AI explains the topic step by step with a code or query example. Answer the short quiz of two to three questions at the end to confirm understanding."
+    }
+  ]
+}

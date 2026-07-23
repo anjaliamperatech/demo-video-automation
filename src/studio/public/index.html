@@ -1,0 +1,609 @@
+<title>Demo Studio</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #0f172a;
+    --panel: #161f36;
+    --panel-border: #263352;
+    --text: #e7ebf5;
+    --muted: #93a0bf;
+    --accent: #6d8bff;
+    --accent-text: #0b1224;
+    --danger: #ff6b6b;
+    --ok: #4ade80;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+  }
+  header {
+    padding: 28px 32px 0;
+  }
+  h1 { margin: 0 0 4px; font-size: 26px; }
+  .subtitle { color: var(--muted); margin: 0 0 20px; font-size: 14px; }
+  main { max-width: 920px; margin: 0 auto; padding: 0 32px 60px; }
+  .tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--panel-border); margin-bottom: 24px; }
+  .tab-btn {
+    background: none; border: none; color: var(--muted); font-size: 15px; font-weight: 600;
+    padding: 10px 16px; cursor: pointer; border-bottom: 2px solid transparent;
+  }
+  .tab-btn.active { color: var(--text); border-bottom-color: var(--accent); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  .card {
+    background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px;
+    padding: 20px; margin-bottom: 18px;
+  }
+  label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--muted); }
+  input[type=text], input[type=number], textarea, select {
+    width: 100%; background: #0b1224; border: 1px solid var(--panel-border); color: var(--text);
+    border-radius: 8px; padding: 9px 11px; font-size: 14px; font-family: inherit; margin-bottom: 14px;
+  }
+  textarea { min-height: 64px; resize: vertical; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .hint { font-size: 12px; color: var(--muted); margin: -10px 0 14px; }
+  .checkbox-row { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; }
+  .checkbox-row input { margin: 0; }
+  .checkbox-row label { margin: 0; font-weight: 500; color: var(--text); }
+  button {
+    background: var(--accent); color: var(--accent-text); border: none; border-radius: 8px;
+    padding: 10px 16px; font-size: 14px; font-weight: 700; cursor: pointer;
+  }
+  button.secondary { background: transparent; color: var(--text); border: 1px solid var(--panel-border); font-weight: 600; }
+  button.danger { background: transparent; color: var(--danger); border: 1px solid var(--danger); }
+  button:disabled { opacity: .5; cursor: not-allowed; }
+  .scene-card { border: 1px solid var(--panel-border); border-radius: 10px; padding: 16px; margin-bottom: 14px; background: #10192f; }
+  .scene-card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .scene-card-head h3 { margin: 0; font-size: 15px; }
+  .action-row { display: grid; grid-template-columns: 140px 1fr 1fr auto; gap: 8px; align-items: start; margin-bottom: 8px; }
+  .action-row input, .action-row select { margin-bottom: 0; }
+  .actions-toolbar { display: flex; gap: 10px; margin-top: 8px; }
+  .status-banner { padding: 10px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
+  .status-banner.ok { background: rgba(74,222,128,.12); color: var(--ok); border: 1px solid rgba(74,222,128,.3); }
+  .status-banner.err { background: rgba(255,107,107,.12); color: var(--danger); border: 1px solid rgba(255,107,107,.3); }
+  .story-scene-toggle { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--panel-border); }
+  .story-scene-toggle:last-child { border-bottom: none; }
+  .locked-tag { font-size: 11px; color: var(--muted); border: 1px solid var(--panel-border); border-radius: 999px; padding: 2px 8px; }
+  #log {
+    background: #05070f; border: 1px solid var(--panel-border); border-radius: 8px; padding: 12px 14px;
+    height: 260px; overflow-y: auto; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px;
+    white-space: pre-wrap; color: #b9c4e0;
+  }
+</style>
+
+<header>
+  <h1>Demo Studio</h1>
+  <p class="subtitle">Build a demo config or record a video — no terminal required.</p>
+</header>
+
+<main>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="build">New / Edit Demo</button>
+    <button class="tab-btn" data-tab="run">Run a Demo</button>
+  </div>
+
+  <section id="tab-build" class="tab-panel active">
+    <div class="card">
+      <label for="loadExisting">Edit an existing demo (optional)</label>
+      <select id="loadExisting"><option value="">— Start a new demo —</option></select>
+    </div>
+
+    <div id="buildStatus"></div>
+
+    <div class="card">
+      <label for="title">Demo title</label>
+      <input type="text" id="title" placeholder="My product demo" />
+
+      <div class="row">
+        <div>
+          <label for="baseUrl">Web address (URL)</label>
+          <input type="text" id="baseUrl" placeholder="https://app.example.com" />
+        </div>
+        <div>
+          <label for="startPath">Starting page</label>
+          <input type="text" id="startPath" placeholder="/login" value="/" />
+        </div>
+      </div>
+    </div>
+
+    <div id="scenesContainer"></div>
+
+    <div class="actions-toolbar">
+      <button type="button" class="secondary" id="addSceneBtn">+ Add scene</button>
+      <button type="button" id="saveStoryBtn">Save demo</button>
+    </div>
+  </section>
+
+  <section id="tab-run" class="tab-panel">
+    <div class="card">
+      <label for="runStorySelect">Choose a demo</label>
+      <select id="runStorySelect"><option value="">— Select a demo —</option></select>
+
+      <div id="runScenesContainer"></div>
+
+      <div class="checkbox-row" style="margin-top: 10px;">
+        <input type="checkbox" id="headedCheckbox" checked />
+        <label for="headedCheckbox">Show the browser while recording (required for any manual step)</label>
+      </div>
+
+      <button type="button" id="startRunBtn" disabled>Start recording</button>
+    </div>
+
+    <div id="runStatus"></div>
+    <div class="card" id="logCard" style="display:none;">
+      <label>Progress</label>
+      <div id="log"></div>
+    </div>
+  </section>
+</main>
+
+<script>
+  const state = { scenes: [], currentFileName: null, stories: [] };
+
+  function slugify(input) {
+    return String(input || '')
+      .toLowerCase().trim()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .replace(/-{2,}/g, '-');
+  }
+  function uid() { return Math.random().toString(36).slice(2, 10); }
+
+  // ---------- Tabs ----------
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+    });
+  });
+
+  // ---------- Scene model ----------
+  function newScene() {
+    return { uiId: uid(), name: '', narration: '', narrationAudioFile: '', optional: false, useAi: true, actions: [] };
+  }
+  function newAction(type) {
+    return { uiId: uid(), type, text: '', label: '', placeholder: '', value: '', url: '', ms: 1000, timeoutMs: 15000, instruction: '', conditions: [{ kind: 'text', value: '' }] };
+  }
+
+  function addScene() {
+    state.scenes.push(newScene());
+    renderScenes();
+  }
+
+  function renderScenes() {
+    const container = document.getElementById('scenesContainer');
+    container.innerHTML = '';
+    state.scenes.forEach((scene, index) => {
+      const card = document.createElement('div');
+      card.className = 'scene-card';
+
+      const head = document.createElement('div');
+      head.className = 'scene-card-head';
+      head.innerHTML = `<h3>Scene ${index + 1}</h3>`;
+      const removeBtn = document.createElement('button');
+      removeBtn.className = 'danger';
+      removeBtn.type = 'button';
+      removeBtn.textContent = 'Remove';
+      removeBtn.addEventListener('click', () => { state.scenes = state.scenes.filter(s => s.uiId !== scene.uiId); renderScenes(); });
+      head.appendChild(removeBtn);
+      card.appendChild(head);
+
+      card.appendChild(field('Scene name', scene.name, v => scene.name = v, 'e.g. Log in'));
+      card.appendChild(textareaField(
+        'Narration (also the caption, and the instruction for AI-planned steps)',
+        scene.narration,
+        v => scene.narration = v,
+        'Describe what happens in plain English, e.g. "Log in with demo@example.com / hunter2"'
+      ));
+      card.appendChild(field('Recorded narration audio file (optional)', scene.narrationAudioFile, v => scene.narrationAudioFile = v, 'Leave blank to auto-narrate with TTS'));
+
+      card.appendChild(checkboxField(`optional-${scene.uiId}`, 'Optional feature (viewer can skip this when running)', scene.optional, v => scene.optional = v));
+      card.appendChild(checkboxField(`useai-${scene.uiId}`, 'Let AI figure out the clicks/typing from the narration above', scene.useAi, v => { scene.useAi = v; renderScenes(); }));
+
+      if (scene.useAi) {
+        const hint = document.createElement('p');
+        hint.className = 'hint';
+        hint.textContent = 'Tip: mention manual or external waits directly in the narration (e.g. "wait for the reviewer to approve this in another tab") — the AI will add a waiting step for it automatically.';
+        card.appendChild(hint);
+      } else {
+        card.appendChild(renderActionsBuilder(scene));
+      }
+
+      container.appendChild(card);
+    });
+  }
+
+  function field(labelText, value, onChange, placeholder) {
+    const wrap = document.createElement('div');
+    const label = document.createElement('label');
+    label.textContent = labelText;
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = value || '';
+    input.placeholder = placeholder || '';
+    input.addEventListener('input', () => onChange(input.value));
+    wrap.appendChild(label);
+    wrap.appendChild(input);
+    return wrap;
+  }
+  function textareaField(labelText, value, onChange, placeholder) {
+    const wrap = document.createElement('div');
+    const label = document.createElement('label');
+    label.textContent = labelText;
+    const textarea = document.createElement('textarea');
+    textarea.value = value || '';
+    textarea.placeholder = placeholder || '';
+    textarea.addEventListener('input', () => onChange(textarea.value));
+    wrap.appendChild(label);
+    wrap.appendChild(textarea);
+    return wrap;
+  }
+  function checkboxField(id, labelText, checked, onChange) {
+    const wrap = document.createElement('div');
+    wrap.className = 'checkbox-row';
+    const input = document.createElement('input');
+    input.type = 'checkbox';
+    input.id = id;
+    input.checked = Boolean(checked);
+    input.addEventListener('change', () => onChange(input.checked));
+    const label = document.createElement('label');
+    label.setAttribute('for', id);
+    label.textContent = labelText;
+    wrap.appendChild(input);
+    wrap.appendChild(label);
+    return wrap;
+  }
+
+  const ACTION_TYPES = [
+    { value: 'clickText', label: 'Click something (by visible text)' },
+    { value: 'fillLabel', label: 'Type into a field (by label)' },
+    { value: 'fillPlaceholder', label: 'Type into a field (by placeholder)' },
+    { value: 'goto', label: 'Go to a page' },
+    { value: 'waitForText', label: 'Wait until text appears' },
+    { value: 'wait', label: 'Pause' },
+    { value: 'waitForUser', label: 'Wait for a manual/external step' }
+  ];
+
+  function renderActionsBuilder(scene) {
+    const wrap = document.createElement('div');
+    const label = document.createElement('label');
+    label.textContent = 'Steps (run in order)';
+    wrap.appendChild(label);
+
+    scene.actions.forEach(action => wrap.appendChild(renderActionRow(scene, action)));
+
+    const addWrap = document.createElement('div');
+    addWrap.style.display = 'flex';
+    addWrap.style.gap = '10px';
+    addWrap.style.marginTop = '4px';
+
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'secondary';
+    addBtn.textContent = '+ Add step';
+    addBtn.addEventListener('click', () => { scene.actions.push(newAction('clickText')); renderScenes(); });
+
+    const addWaitBtn = document.createElement('button');
+    addWaitBtn.type = 'button';
+    addWaitBtn.className = 'secondary';
+    addWaitBtn.textContent = '+ Add manual-step wait';
+    addWaitBtn.addEventListener('click', () => { scene.actions.push(newAction('waitForUser')); renderScenes(); });
+
+    addWrap.appendChild(addBtn);
+    addWrap.appendChild(addWaitBtn);
+    wrap.appendChild(addWrap);
+    return wrap;
+  }
+
+  function renderActionRow(scene, action) {
+    const row = document.createElement('div');
+    row.className = 'action-row';
+
+    const typeSelect = document.createElement('select');
+    ACTION_TYPES.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.value; opt.textContent = t.label;
+      if (t.value === action.type) opt.selected = true;
+      typeSelect.appendChild(opt);
+    });
+    typeSelect.addEventListener('change', () => { action.type = typeSelect.value; renderScenes(); });
+    row.appendChild(typeSelect);
+
+    const fieldsWrap = document.createElement('div');
+    fieldsWrap.style.gridColumn = 'span 2';
+    fieldsWrap.style.display = 'grid';
+    fieldsWrap.style.gridTemplateColumns = '1fr 1fr';
+    fieldsWrap.style.gap = '8px';
+
+    function smallInput(placeholder, value, onChange) {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.placeholder = placeholder;
+      input.value = value || '';
+      input.style.marginBottom = '0';
+      input.addEventListener('input', () => onChange(input.value));
+      return input;
+    }
+
+    if (action.type === 'clickText') {
+      fieldsWrap.appendChild(smallInput('Text on the thing to click', action.text, v => action.text = v));
+    } else if (action.type === 'fillLabel') {
+      fieldsWrap.appendChild(smallInput("Field's label", action.label, v => action.label = v));
+      fieldsWrap.appendChild(smallInput('Value (use ${env.VAR_NAME} for secrets)', action.value, v => action.value = v));
+    } else if (action.type === 'fillPlaceholder') {
+      fieldsWrap.appendChild(smallInput("Field's placeholder text", action.placeholder, v => action.placeholder = v));
+      fieldsWrap.appendChild(smallInput('Value (use ${env.VAR_NAME} for secrets)', action.value, v => action.value = v));
+    } else if (action.type === 'goto') {
+      fieldsWrap.appendChild(smallInput('Page path, e.g. /dashboard', action.url, v => action.url = v));
+    } else if (action.type === 'waitForText') {
+      fieldsWrap.appendChild(smallInput('Text to wait for', action.text, v => action.text = v));
+    } else if (action.type === 'wait') {
+      const input = smallInput('Milliseconds', action.ms, v => action.ms = Number(v) || 1000);
+      input.type = 'number';
+      fieldsWrap.appendChild(input);
+    } else if (action.type === 'waitForUser') {
+      const instructionWrap = document.createElement('div');
+      instructionWrap.style.gridColumn = 'span 2';
+      instructionWrap.appendChild(smallInput('What should the viewer be told to do?', action.instruction, v => action.instruction = v));
+      fieldsWrap.appendChild(instructionWrap);
+
+      action.conditions.forEach((condition, condIndex) => {
+        const condRow = document.createElement('div');
+        condRow.style.gridColumn = 'span 2';
+        condRow.style.display = 'grid';
+        condRow.style.gridTemplateColumns = '120px 1fr auto';
+        condRow.style.gap = '6px';
+        condRow.style.marginBottom = '4px';
+
+        const kindSelect = document.createElement('select');
+        kindSelect.style.marginBottom = '0';
+        [['text', 'Text appears'], ['url', 'URL matches'], ['selector', 'CSS selector appears']].forEach(([value, labelText]) => {
+          const opt = document.createElement('option');
+          opt.value = value; opt.textContent = labelText;
+          if (value === condition.kind) opt.selected = true;
+          kindSelect.appendChild(opt);
+        });
+        kindSelect.addEventListener('change', () => { condition.kind = kindSelect.value; renderScenes(); });
+
+        const valueInput = smallInput(
+          condition.kind === 'url' ? 'URL pattern, e.g. **/approved**' : condition.kind === 'selector' ? 'CSS selector' : 'Text to watch for',
+          condition.value,
+          v => condition.value = v
+        );
+
+        const removeCondBtn = document.createElement('button');
+        removeCondBtn.type = 'button';
+        removeCondBtn.className = 'danger';
+        removeCondBtn.textContent = '×';
+        removeCondBtn.addEventListener('click', () => { action.conditions.splice(condIndex, 1); renderScenes(); });
+
+        condRow.appendChild(kindSelect);
+        condRow.appendChild(valueInput);
+        condRow.appendChild(removeCondBtn);
+        fieldsWrap.appendChild(condRow);
+      });
+
+      const addCondBtn = document.createElement('button');
+      addCondBtn.type = 'button';
+      addCondBtn.className = 'secondary';
+      addCondBtn.style.gridColumn = 'span 2';
+      addCondBtn.textContent = '+ Add another condition (continues on whichever happens first)';
+      addCondBtn.addEventListener('click', () => { action.conditions.push({ kind: 'text', value: '' }); renderScenes(); });
+      fieldsWrap.appendChild(addCondBtn);
+    }
+
+    row.appendChild(fieldsWrap);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'danger';
+    removeBtn.textContent = 'Remove';
+    removeBtn.addEventListener('click', () => { scene.actions = scene.actions.filter(a => a.uiId !== action.uiId); renderScenes(); });
+    row.appendChild(removeBtn);
+
+    return row;
+  }
+
+  document.getElementById('addSceneBtn').addEventListener('click', addScene);
+
+  // ---------- Serialize / Save ----------
+  function serializeAction(action) {
+    switch (action.type) {
+      case 'clickText': return { type: 'clickText', text: action.text };
+      case 'fillLabel': return { type: 'fillLabel', label: action.label, value: action.value };
+      case 'fillPlaceholder': return { type: 'fillPlaceholder', placeholder: action.placeholder, value: action.value };
+      case 'goto': return { type: 'goto', url: action.url };
+      case 'waitForText': return { type: 'waitForText', text: action.text, timeoutMs: action.timeoutMs || 15000 };
+      case 'wait': return { type: 'wait', ms: action.ms || 1000 };
+      case 'waitForUser': return {
+        type: 'waitForUser',
+        instruction: action.instruction,
+        until: action.conditions
+          .filter(c => c.value)
+          .map(c => c.kind === 'url' ? { kind: 'url', pattern: c.value } : c.kind === 'selector' ? { kind: 'selector', selector: c.value } : { kind: 'text', text: c.value })
+      };
+      default: return null;
+    }
+  }
+
+  function buildStoryPayload() {
+    const title = document.getElementById('title').value.trim();
+    const baseUrl = document.getElementById('baseUrl').value.trim();
+    const startPath = document.getElementById('startPath').value.trim() || '/';
+
+    return {
+      fileName: state.currentFileName || undefined,
+      title, baseUrl, startPath,
+      viewport: { width: 1440, height: 900 },
+      video: { retainRawVideo: true, burnSubtitles: true, audioFile: null, bannerDurationMs: 1200 },
+      capture: { includeHeaders: false, includeBodies: true, maxBodyLength: 4000, urlIncludes: ['/api/'], redactKeys: ['password', 'token', 'authorization', 'cookie', 'set-cookie'] },
+      setup: [],
+      scenes: state.scenes.map((scene, index) => {
+        const out = {
+          id: slugify(scene.name) || `scene-${index + 1}`,
+          name: scene.name || `Scene ${index + 1}`,
+          narration: scene.narration,
+          pauseAfterMs: 1000
+        };
+        if (scene.narrationAudioFile) out.narrationAudioFile = scene.narrationAudioFile;
+        if (scene.optional) out.optional = true;
+        if (!scene.useAi) out.actions = scene.actions.map(serializeAction).filter(Boolean);
+        return out;
+      })
+    };
+  }
+
+  function showStatus(containerId, message, ok) {
+    const el = document.getElementById(containerId);
+    el.innerHTML = `<div class="status-banner ${ok ? 'ok' : 'err'}">${message}</div>`;
+  }
+
+  document.getElementById('saveStoryBtn').addEventListener('click', async () => {
+    const payload = buildStoryPayload();
+    const res = await fetch('/api/stories', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (data.ok) {
+      showStatus('buildStatus', `Saved to stories/${data.file}. Switch to "Run a Demo" to record it.`, true);
+      state.currentFileName = data.file;
+      await loadStoriesList();
+    } else {
+      showStatus('buildStatus', `Could not save: ${(data.errors || [data.error]).join('; ')}`, false);
+    }
+  });
+
+  document.getElementById('loadExisting').addEventListener('change', async e => {
+    const file = e.target.value;
+    if (!file) { state.scenes = [newScene()]; state.currentFileName = null; renderScenes(); return; }
+    const res = await fetch(`/api/stories/${encodeURIComponent(file)}`);
+    const data = await res.json();
+    if (!data.ok) { showStatus('buildStatus', data.error, false); return; }
+    const story = data.story;
+    state.currentFileName = data.file;
+    document.getElementById('title').value = story.title || '';
+    document.getElementById('baseUrl').value = story.baseUrl || '';
+    document.getElementById('startPath').value = story.startPath || '/';
+    state.scenes = (story.scenes || []).map(scene => ({
+      uiId: uid(),
+      name: scene.name || '',
+      narration: scene.narration || '',
+      narrationAudioFile: scene.narrationAudioFile || '',
+      optional: Boolean(scene.optional),
+      useAi: !(Array.isArray(scene.actions) && scene.actions.length),
+      actions: (scene.actions || []).map(a => ({
+        uiId: uid(),
+        type: a.type,
+        text: a.text || '',
+        label: a.label || '',
+        placeholder: a.placeholder || '',
+        value: a.value || '',
+        url: a.url || '',
+        ms: a.ms || 1000,
+        timeoutMs: a.timeoutMs || 15000,
+        instruction: a.instruction || '',
+        conditions: a.type === 'waitForUser'
+          ? (a.until || []).map(c => ({ kind: c.kind, value: c.text || c.pattern || c.selector || '' }))
+          : [{ kind: 'text', value: '' }]
+      }))
+    }));
+    renderScenes();
+  });
+
+  // ---------- Run tab ----------
+  async function loadStoriesList() {
+    const res = await fetch('/api/stories');
+    const data = await res.json();
+    state.stories = data.stories || [];
+
+    const loadSelect = document.getElementById('loadExisting');
+    const runSelect = document.getElementById('runStorySelect');
+    loadSelect.innerHTML = '<option value="">— Start a new demo —</option>';
+    runSelect.innerHTML = '<option value="">— Select a demo —</option>';
+    state.stories.forEach(story => {
+      const opt1 = document.createElement('option');
+      opt1.value = story.file; opt1.textContent = story.title;
+      loadSelect.appendChild(opt1);
+      const opt2 = document.createElement('option');
+      opt2.value = story.file; opt2.textContent = story.title;
+      runSelect.appendChild(opt2);
+    });
+  }
+
+  document.getElementById('runStorySelect').addEventListener('change', e => {
+    const story = state.stories.find(s => s.file === e.target.value);
+    const container = document.getElementById('runScenesContainer');
+    container.innerHTML = '';
+    document.getElementById('startRunBtn').disabled = !story;
+    if (!story) return;
+
+    story.scenes.forEach(scene => {
+      const row = document.createElement('div');
+      row.className = 'story-scene-toggle';
+      if (scene.optional) {
+        row.innerHTML = `
+          <label style="margin:0; font-weight:500; color:var(--text);" for="run-${scene.id}">${scene.name}</label>
+          <input type="checkbox" id="run-${scene.id}" data-scene-id="${scene.id}" checked />
+        `;
+      } else {
+        row.innerHTML = `<span>${scene.name}</span><span class="locked-tag">always included</span>`;
+      }
+      container.appendChild(row);
+    });
+  });
+
+  document.getElementById('startRunBtn').addEventListener('click', async () => {
+    const storyFile = document.getElementById('runStorySelect').value;
+    if (!storyFile) return;
+    const selectedSceneIds = Array.from(document.querySelectorAll('#runScenesContainer input[type=checkbox]:checked')).map(el => el.dataset.sceneId);
+    const headed = document.getElementById('headedCheckbox').checked;
+
+    document.getElementById('startRunBtn').disabled = true;
+    document.getElementById('logCard').style.display = 'block';
+    document.getElementById('log').textContent = '';
+    document.getElementById('runStatus').innerHTML = '';
+
+    const res = await fetch('/api/run', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ storyPath: storyFile, selectedSceneIds, headed })
+    });
+    const data = await res.json();
+    if (!data.ok) {
+      showStatus('runStatus', data.error, false);
+      document.getElementById('startRunBtn').disabled = false;
+      return;
+    }
+
+    const logEl = document.getElementById('log');
+    const source = new EventSource(`/api/run/${data.runId}/events`);
+    source.addEventListener('line', e => {
+      logEl.textContent += JSON.parse(e.data) + '\n';
+      logEl.scrollTop = logEl.scrollHeight;
+    });
+    source.addEventListener('done', e => {
+      const payload = JSON.parse(e.data);
+      if (payload.success) {
+        showStatus('runStatus', `Done! Final video: ${payload.finalVideo || '(see output folder)'}`, true);
+      } else {
+        showStatus('runStatus', 'The recording failed — see the progress log above for details.', false);
+      }
+      document.getElementById('startRunBtn').disabled = false;
+      source.close();
+    });
+    source.onerror = () => {
+      document.getElementById('startRunBtn').disabled = false;
+      source.close();
+    };
+  });
+
+  // ---------- Init ----------
+  state.scenes = [newScene()];
+  renderScenes();
+  loadStoriesList();
+</script>

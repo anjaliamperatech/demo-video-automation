@@ -46,6 +46,16 @@ export async function snapshotInteractiveElements(page, { max = 60 } = {}) {
       });
     });
 
+    document.querySelectorAll('input[type="checkbox"], input[type="radio"]').forEach(el => {
+      if (items.length >= maxItems || !isVisible(el)) return;
+      const wrappingLabel = el.closest('label');
+      const labelText = wrappingLabel?.innerText || labelFor(el) || '';
+      const firstLine = labelText.split('\n').map(line => line.trim()).find(Boolean) || '';
+      const text = firstLine.replace(/\s+/g, ' ').slice(0, 80);
+      if (!text) return;
+      items.push({ kind: 'checkbox', checked: el.checked, text });
+    });
+
     document.querySelectorAll('select').forEach(el => {
       if (items.length >= maxItems || !isVisible(el)) return;
       items.push({

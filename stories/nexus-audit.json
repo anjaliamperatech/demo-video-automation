@@ -1,0 +1,39 @@
+{
+  "title": "nexus audit",
+  "baseUrl": "https://yellow-flower-0813d1100.7.azurestaticapps.net/login",
+  "startPath": "/",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "video": {
+    "retainRawVideo": true,
+    "burnSubtitles": true,
+    "audioFile": null,
+    "bannerDurationMs": 1200
+  },
+  "capture": {
+    "includeHeaders": false,
+    "includeBodies": true,
+    "maxBodyLength": 4000,
+    "urlIncludes": [
+      "/api/"
+    ],
+    "redactKeys": [
+      "password",
+      "token",
+      "authorization",
+      "cookie",
+      "set-cookie"
+    ]
+  },
+  "setup": [],
+  "scenes": [
+    {
+      "id": "login",
+      "name": "login",
+      "narration": "login username agent1 and password agent1",
+      "pauseAfterMs": 1000
+    }
+  ]
+}

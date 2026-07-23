@@ -1,0 +1,132 @@
+{
+  "title": "BrandRank AI demo",
+  "baseUrl": "${env.BRV_BASE_URL}",
+  "startPath": "/",
+  "viewport": {
+    "width": 1440,
+    "height": 900
+  },
+  "video": {
+    "retainRawVideo": true,
+    "burnSubtitles": true,
+    "audioFile": null,
+    "bannerDurationMs": 1200
+  },
+  "capture": {
+    "includeHeaders": false,
+    "includeBodies": true,
+    "maxBodyLength": 4000,
+    "urlIncludes": ["/api/"],
+    "redactKeys": ["password", "token", "authorization", "cookie", "set-cookie", "access_token"]
+  },
+  "setup": [],
+  "scenes": [
+    {
+      "id": "landing",
+      "name": "Landing",
+      "narration": "This is BrandRank AI, a platform that tracks how visible your brand is across AI engines like ChatGPT, Gemini, and Perplexity, alongside traditional Google search. It brings your organic search performance and your AI-search presence into one dashboard, so you can see the full picture of how people discover your brand today.",
+      "narrationAudioFile": "./narration/landing.mp3",
+      "pauseAfterMs": 1500,
+      "actions": [
+        { "type": "goto", "url": "/" },
+        { "type": "wait", "ms": 1000 }
+      ]
+    },
+    {
+      "id": "login",
+      "name": "Login",
+      "narration": "We sign in to get to the dashboard, where all of the brand's tracked data lives.",
+      "narrationAudioFile": "./narration/login.mp3",
+      "pauseAfterMs": 1000,
+      "actions": [
+        { "type": "clickText", "text": "Sign In" },
+        { "type": "fillLabel", "label": "Username", "value": "${env.BRV_USERNAME}" },
+        { "type": "fillLabel", "label": "Password", "value": "${env.BRV_PASSWORD}" },
+        { "type": "click", "selector": "button[type=\"submit\"]" },
+        { "type": "waitForText", "text": "SEO Dashboard", "timeoutMs": 15000 },
+        { "type": "scrollToBottom" }
+      ]
+    },
+    {
+      "id": "gap-mapping",
+      "name": "Gap Mapping",
+      "narration": "First, Phase 1: Gap Mapping shows where our brand is missing from the conversation compared to competitors. Every gap is clustered by topic and scored by opportunity, so the team can see at a glance which conversations are worth chasing first and how big a win each one represents.",
+      "narrationAudioFile": "./narration/gap-mapping.mp3",
+      "pauseAfterMs": 3000,
+      "actions": [
+        { "type": "clickText", "text": "Phase 1: Gap Mapping" },
+        { "type": "wait", "ms": 5000 },
+        { "type": "scrollToBottom" }
+      ]
+    },
+    {
+      "id": "seo-visibility",
+      "name": "SEO Visibility",
+      "narration": "Switching over to SEO Visibility, we can see our organic search rankings across the tracked keyword set. This view tracks where each keyword ranks over time, so the team can spot rankings that are climbing, slipping, or stuck, and prioritize accordingly.",
+      "narrationAudioFile": "./narration/seo-visibility.mp3",
+      "pauseAfterMs": 2500,
+      "actions": [
+        { "type": "clickText", "text": "SEO Visibility" },
+        { "type": "wait", "ms": 3000 },
+        { "type": "scrollToBottom" }
+      ]
+    },
+    {
+      "id": "seo-traffic",
+      "name": "SEO Traffic Data",
+      "narration": "SEO Traffic Data pulls in the real Google Search Console numbers behind those rankings, showing actual clicks, impressions, and click-through rate for every tracked page, so the team can connect ranking movement to real visitor traffic.",
+      "narrationAudioFile": "./narration/seo-traffic.mp3",
+      "pauseAfterMs": 2500,
+      "actions": [
+        { "type": "clickText", "text": "SEO Traffic Data" },
+        { "type": "wait", "ms": 3000 },
+        { "type": "scrollToBottom" }
+      ]
+    },
+    {
+      "id": "ai-visibility",
+      "name": "AI Visibility",
+      "narration": "And here's AI Visibility, showing how often and how favorably the brand shows up in AI engine responses. It breaks down mentions by engine, so the team can see exactly where the brand is being cited, recommended, or left out entirely across ChatGPT, Gemini, and Perplexity.",
+      "narrationAudioFile": "./narration/ai-visibility.mp3",
+      "pauseAfterMs": 2500,
+      "actions": [
+        { "type": "clickText", "text": "AI Visibility" },
+        { "type": "wait", "ms": 3000 },
+        { "type": "scrollToBottom" }
+      ]
+    },
+    {
+      "id": "content-gen",
+      "name": "Content Gen",
+      "narration": "This is the heart of the platform: Phase 2 Content Gen turns those keyword gaps into SEO- and AEO-optimized content briefs, ready to close the gap with competitors. Each brief is generated directly from the opportunity data we just looked at, so nothing has to be researched from scratch.",
+      "narrationAudioFile": "./narration/content-gen.mp3",
+      "pauseAfterMs": 3200,
+      "actions": [
+        { "type": "clickText", "text": "Phase 2: Content Gen" },
+        { "type": "wait", "ms": 3000 },
+        { "type": "scrollToBottom" }
+      ]
+    },
+    {
+      "id": "generate-content",
+      "name": "Generate content",
+      "narration": "This page lists priority keyword gaps, each with a checkbox next to its name. Check the checkbox next to exactly one keyword gap in the list to select it, then click the button below the list that generates content for the selected keyword. Wait for the View Package button to appear, which means the content brief is ready.",
+      "narrationAudioFile": "./narration/generate-content.mp3",
+      "pauseAfterMs": 2000,
+      "waitForTextMinMs": 600000
+    },
+    {
+      "id": "view-package",
+      "name": "View Package",
+      "narration": "The generated content brief is ready. Opening View Package shows the finished piece, and downloading it as HTML gives us the final, ready-to-publish output.",
+      "narrationAudioFile": "./narration/view-package.mp3",
+      "pauseAfterMs": 2500,
+      "actions": [
+        { "type": "clickText", "text": "View Package" },
+        { "type": "wait", "ms": 2000 },
+        { "type": "scrollToBottom" },
+        { "type": "downloadAndOpen", "text": "Download HTML" }
+      ]
+    }
+  ]
+}

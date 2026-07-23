@@ -6,6 +6,7 @@
   "description": "Story-driven application demo video generator using Playwright and FFmpeg",
   "scripts": {
     "demo:video": "node ./src/cli.mjs",
+    "demo:studio": "node ./src/studio/server.mjs",
     "story:new": "node ./src/story-wizard.mjs",
     "story:validate": "node ./src/cli.mjs --validate-only --story ./stories/customer-onboarding.json",
     "setup": "npm install && npx playwright install chromium"
@@ -15,5 +16,9 @@
   },
   "dependencies": {
     "playwright": "^1.55.0"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "@types/node": "^26.1.1"
   }
 }

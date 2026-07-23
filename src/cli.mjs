@@ -13,7 +13,8 @@ function parseArgs(argv) {
     headed: false,
     validateOnly: false,
     story: null,
-    output: './output'
+    output: './output',
+    scenes: null
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -26,6 +27,10 @@ function parseArgs(argv) {
         break;
       case '--output':
         args.output = argv[index + 1];
+        index += 1;
+        break;
+      case '--scenes':
+        args.scenes = argv[index + 1].split(',').map(id => id.trim()).filter(Boolean);
         index += 1;
         break;
       case '--headed':
@@ -49,7 +54,7 @@ function parseArgs(argv) {
 }
 
 function printHelp() {
-  console.log(`\nPlaywright Demo Video POC\n\nUsage:\n  node ./src/cli.mjs --story ./stories/customer-onboarding.json [--output ./output] [--headed] [--validate-only]\n`);
+  console.log(`\nPlaywright Demo Video POC\n\nUsage:\n  node ./src/cli.mjs --story ./stories/customer-onboarding.json [--output ./output] [--headed] [--validate-only] [--scenes id1,id2]\n\n  --scenes limits which scenes marked "optional": true in the story run; scenes without that flag always run.\n`);
 }
 
 async function main() {
@@ -91,6 +96,7 @@ async function main() {
       storyPath,
       outputDir,
       headed: args.headed,
+      selectedSceneIds: args.scenes,
       logger
     });
 

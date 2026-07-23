@@ -21,3 +21,15 @@ export function toSrtTimestamp(milliseconds) {
   const pad = (value, digits = 2) => String(value).padStart(digits, '0');
   return `${pad(hours)}:${pad(minutes)}:${pad(seconds)},${pad(ms, 3)}`;
 }
+
+export function toAssTimestamp(milliseconds) {
+  const totalMs = Math.max(0, Math.floor(milliseconds));
+  const centiseconds = Math.floor((totalMs % 1000) / 10);
+  const totalSeconds = Math.floor(totalMs / 1000);
+  const seconds = totalSeconds % 60;
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  const minutes = totalMinutes % 60;
+  const hours = Math.floor(totalMinutes / 60);
+  const pad = (value, digits = 2) => String(value).padStart(digits, '0');
+  return `${hours}:${pad(minutes)}:${pad(seconds)}.${pad(centiseconds)}`;
+}
